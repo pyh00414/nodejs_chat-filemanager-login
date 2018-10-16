@@ -1,0 +1,179 @@
+<style>
+	
+
+	body {
+		font-family: Arial, Helvetica, sans-serif;
+	}
+
+	/* Style the header */
+
+	header {
+		background-color: #666;
+		padding: 30px;
+		text-align: center;
+		font-size: 35px;
+		color: white;
+	}
+
+	/* Container for flexboxes */
+
+	section {
+		width: 80%;
+		margin: auto;
+		display: -webkit-flex;
+		display: flex;
+	}
+
+	/* Style the navigation menu */
+
+	nav {
+		-webkit-flex: 1;
+		-ms-flex: 1;
+		flex: 1;
+		background: #FAFAFA;
+		padding: 20px;
+
+	}
+
+	/* Style the list inside the menu */
+
+	nav ul {
+		list-style-type: none;
+		padding: 0;
+	}
+
+	nav ul li {
+		margin-top: 5px;
+	}
+
+	/* Style the content */
+
+	article {
+		-webkit-flex: 3;
+		-ms-flex: 3;
+		flex: 3;
+		background-color: #f1f1f1;
+		padding: 10px;
+	}
+
+	/* Style the footer */
+
+	footer {
+		background-color: #777;
+		padding: 10px;
+		text-align: center;
+		color: white;
+	}
+
+	/* Responsive layout - makes the menu and the content (inside the section) sit on top of each other instead of next to each other */
+
+	@media (max-width: 600px) {
+		section {
+			-webkit-flex-direction: column;
+			flex-direction: column;
+		}
+	}
+</style>
+<html lang="en">
+
+<head>
+
+	<script src="codemirror/codemirror.js"></script>
+	<link rel="stylesheet" href="codemirror/codemirror.css">
+	<link rel="stylesheet" href="codemirror/dracula.css">
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+
+<% include ./header %>
+
+	<div align="center" style="margin-top:40px">
+
+		<form action="/uploads" method="post" enctype="multipart/form-data">
+			<input type="file" name="userfile">
+			<input type="submit" value="파일 업로드하기">
+		</form>
+	</div>
+	<section>
+
+		<% if(fileName) { %>
+			<button onclick="getFiles('<%= fileName %>')">
+				<%= fileName %>
+			</button>
+			<% } %>
+
+				<nav>
+					<ul id="fileList">
+
+					</ul>
+				</nav>
+
+	</section>
+
+	<textArea id='editor' style="margin-top:20px"></textArea>
+	<Button onclick="updateFileContents()">
+		저장
+	</Button>
+
+</html>
+<script>
+	
+	const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+		lineNumbers: true,
+		theme: "dracula"
+	});
+	
+	let selectedFile = '';         
+
+	function getFiles(file) { 
+		
+		axios.get('/getSubFiles', {
+				params: {
+					fileName: file,
+				}
+			})
+			.then(function(response) {
+				const datas = response.data;
+			
+			let file;
+			
+				datas.forEach((data) => {
+
+					file = data.slice(35, data.length - 1);
+					$('#fileList').append(`<a onclick="getFileContents('${data}')"><li>${file}</li></a></>`)
+				})
+			})
+			.catch(function(error) {
+				console.log(error);
+			});
+	}
+
+	function getFileContents(file) { 
+		selectedFile = file;
+		axios.get('/getFileContents', {
+				params: {
+					file: file
+				}
+			})
+			.then(function(res) {
+				editor.getDoc().setValue(res.data);
+			})
+			.catch(function(error) {});
+	}
+
+	function updateFileContents() {
+		const updateCode = editor.getDoc().getValue();
+		axios.get('/updateFileContents', {
+				params: {
+					code: updateCode,
+					file: selectedFile
+				}
+			})
+			.then(function(res) {
+			})
+			.catch(function(error) {});
+	}
+</script>

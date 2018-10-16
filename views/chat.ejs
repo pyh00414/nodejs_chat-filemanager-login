@@ -1,0 +1,118 @@
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+
+	<style>
+		#container {
+			width: 700px;
+			height: 400px;
+			margin: auto;
+			margin-top: 30px;
+			border: 1px solid;
+		}
+
+		#center {
+			width: 100%;
+			height: 100%;
+			border-right: 1px solid;
+			float: left;
+		}
+
+		#chat {
+			width: 100%;
+			height: 93%;
+			border-right: 1px solid;
+			float: left;
+		}
+
+		#footer {
+			width: 100%;
+			height: 7%;
+			border-top: 1px solid;
+			float: left;
+		}
+	</style>
+
+</head>
+
+<body>
+	<header>
+	 <% include ./header %>
+	</header>
+	
+	<div id="container">
+
+		<div id="center">
+			<div id="chat"></div>
+			<div id="footer">
+				<input id="message" style="width:80%;height:75%" />
+				<input type="button" id="send" value="SEND" style="width:17%;height:100%" />
+			</div>
+		</div>
+	</div>
+
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+
+	<script>
+		
+		const userId = '<%= userId %>';
+	
+		const socket = io.connect('project-wvswe.run.goorm.io', {
+			path: '/socket.io'
+		});
+		socket.on('connect', function() {
+			socket.emit('newUser',userId);
+		});
+		
+		socket.on('updateMsgRecord',(message,user)=>{
+			
+			for(let i=0;i<user.length;i++){
+					$('#chat').append(`<b>${user[i]} : </b>${message[i]}<br>`);
+				}
+			
+			$('#chat').append(`<b style="color:#FF0000" >--------------------------------------------------과거 채팅내역---------------------------------------------------<br>`);
+			
+		})
+		
+		socket.on('updateChat', function(user, text) {
+			// $('#chat').append('<b>' + user + ':</b> ' + text + '<br>');
+			
+			$('#chat').append(`<b>${user} <button onclick="whipser('${user}')">귓속말 보내기</button> : </b>${text}<br>`);
+		});
+		
+		socket.on('whisper',(message,you)=>{
+			// 채팅방에 달기
+			if(userId===you){
+				alert('자기 자신에게는 귓속말을 할 수 없습니다.');
+				return;
+			}else{
+				$('#chat').append(`<b style="height: 10px; background-color: #9FF781"> ${you} ===> ${message}<br>`);
+			}
+		})
+
+		function whipser(user) {
+			
+			socket.emit('whisper', prompt('insert message'),userId,user);
+		}
+		$(function() {
+			$('#send').click(function() {
+				const msg = $('#message').val();
+				$('#message').val('');
+				socket.emit('sendMsg', msg);
+			});
+			$('#message').keypress(function(e) {
+				if (e.which == 13) {
+					$(this).blur();
+					$('#send').focus().click();
+				}
+			});
+		});
+
+		
+	</script>
+</body>
+
+</html>
