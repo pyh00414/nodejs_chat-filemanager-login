@@ -21,6 +21,7 @@
 		}
 
 		#chat {
+			overflow-y: auto;
 			width: 100%;
 			height: 93%;
 			border-right: 1px solid;
@@ -39,9 +40,9 @@
 
 <body>
 	<header>
-	 <% include ./header %>
+		<% include ./header %>
 	</header>
-	
+
 	<div id="container">
 
 		<div id="center">
@@ -57,45 +58,35 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
 
 	<script>
-		
 		const userId = '<%= userId %>';
-	
 		const socket = io.connect('project-wvswe.run.goorm.io', {
 			path: '/socket.io'
 		});
 		socket.on('connect', function() {
-			socket.emit('newUser',userId);
+			socket.emit('newUser', userId);
 		});
-		
-		socket.on('updateMsgRecord',(message,user)=>{
-			
-			for(let i=0;i<user.length;i++){
-					$('#chat').append(`<b>${user[i]} : </b>${message[i]}<br>`);
-				}
-			
+		socket.on('updateMsgRecord', (message, user) => {
+			for (let i = 0; i < user.length; i++) {
+				$('#chat').append(`<b>${user[i]} : </b>${message[i]}<br>`);
+			}
 			$('#chat').append(`<b style="color:#FF0000" >--------------------------------------------------과거 채팅내역---------------------------------------------------<br>`);
-			
 		})
-		
 		socket.on('updateChat', function(user, text) {
 			// $('#chat').append('<b>' + user + ':</b> ' + text + '<br>');
-			
 			$('#chat').append(`<b>${user} <button onclick="whipser('${user}')">귓속말 보내기</button> : </b>${text}<br>`);
 		});
-		
-		socket.on('whisper',(message,you)=>{
+		socket.on('whisper', (message, you) => {
 			// 채팅방에 달기
-			if(userId===you){
+			if (userId === you) {
 				alert('자기 자신에게는 귓속말을 할 수 없습니다.');
 				return;
-			}else{
+			} else {
 				$('#chat').append(`<b style="height: 10px; background-color: #9FF781"> ${you} ===> ${message}<br>`);
 			}
 		})
 
 		function whipser(user) {
-			
-			socket.emit('whisper', prompt('insert message'),userId,user);
+			socket.emit('whisper', prompt('insert message'), userId, user);
 		}
 		$(function() {
 			$('#send').click(function() {
@@ -110,8 +101,6 @@
 				}
 			});
 		});
-
-		
 	</script>
 </body>
 
